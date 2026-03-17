@@ -1,0 +1,32 @@
+# Xcode
+*.xcodeproj/
+xcuserdata/
+*.xcworkspace/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Packages/
+
+# Various settings
+*.pbxuser
+*.perspectivev3
+!default.pbxuser
+!default.perspectivev3
+*.mode1v3
+*.mode2v3
+!default.mode1v3
+!default.mode2v3
+*.hmap
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# Worktrees
+.wt/

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>GeoAlarm needs your location to trigger alarms only when you're at the right place.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GeoAlarm needs your location to set alarm locations and check if you're nearby.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.elias.geoalarm.refresh</string>
+	</array>
+</dict>
+</plist>
