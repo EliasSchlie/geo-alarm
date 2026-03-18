@@ -1,15 +1,18 @@
 import Foundation
 
 enum AlarmSoundType: String, Codable, CaseIterable, Identifiable {
+    case gentle = "Gentle"
+    case soft = "Soft"
+    case chime = "Chime"
     case classic = "Classic"
     case radar = "Radar"
-    case chime = "Chime"
     case urgent = "Urgent"
 
     var id: String { rawValue }
 }
 
 enum AlarmSoundDuration: Int, Codable, CaseIterable, Identifiable {
+    case three = 3
     case five = 5
     case ten = 10
     case fifteen = 15
