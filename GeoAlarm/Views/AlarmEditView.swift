@@ -16,6 +16,8 @@ struct AlarmEditView: View {
     @State private var latitude: Double
     @State private var longitude: Double
     @State private var radius: Double
+    @State private var soundType: AlarmSoundType
+    @State private var soundDuration: AlarmSoundDuration
 
     @State private var showingLocationPicker = false
 
@@ -31,15 +33,15 @@ struct AlarmEditView: View {
         _latitude = State(initialValue: alarm?.latitude ?? 0)
         _longitude = State(initialValue: alarm?.longitude ?? 0)
         _radius = State(initialValue: alarm?.radiusMeters ?? 200)
+        _soundType = State(initialValue: alarm?.soundType ?? AlarmSoundSettings.defaultType)
+        _soundDuration = State(initialValue: alarm?.soundDuration ?? AlarmSoundSettings.defaultDuration)
     }
 
     private var selectedTime: Date {
-        get {
-            var components = DateComponents()
-            components.hour = hour
-            components.minute = minute
-            return Calendar.current.date(from: components) ?? Date()
-        }
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        return Calendar.current.date(from: components) ?? Date()
     }
 
     var body: some View {
@@ -87,6 +89,20 @@ struct AlarmEditView: View {
                         }
                     }
                 }
+
+                Section("Sound") {
+                    Picker("Type", selection: $soundType) {
+                        ForEach(AlarmSoundType.allCases) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+
+                    Picker("Duration", selection: $soundDuration) {
+                        ForEach(AlarmSoundDuration.allCases) { dur in
+                            Text(dur.label).tag(dur)
+                        }
+                    }
+                }
             }
             .navigationTitle(isNew ? "New Alarm" : "Edit Alarm")
             .navigationBarTitleDisplayMode(.inline)
@@ -120,6 +136,8 @@ struct AlarmEditView: View {
             alarm.latitude = latitude
             alarm.longitude = longitude
             alarm.radiusMeters = radius
+            alarm.soundType = soundType
+            alarm.soundDuration = soundDuration
         } else {
             let newAlarm = Alarm(
                 label: label,
@@ -130,7 +148,9 @@ struct AlarmEditView: View {
                 locationName: locationName,
                 latitude: latitude,
                 longitude: longitude,
-                radiusMeters: radius
+                radiusMeters: radius,
+                soundType: soundType,
+                soundDuration: soundDuration
             )
             modelContext.insert(newAlarm)
         }
@@ -146,7 +166,6 @@ struct RepeatDaysPicker: View {
 
     private static let allDays: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
     private let days = Calendar.current.shortWeekdaySymbols
-    // Calendar weekday: 1=Sun, 2=Mon, ..., 7=Sat
 
     private var isEveryDay: Bool {
         selectedDays == Self.allDays

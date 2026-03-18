@@ -9,6 +9,12 @@ struct AlarmListView: View {
     @EnvironmentObject private var notificationManager: NotificationManager
 
     @State private var showingAddAlarm = false
+    @State private var showingSettings = false
+
+    private var needsLocationUpgrade: Bool {
+        let status = locationManager.authorizationStatus
+        return status == .authorizedWhenInUse || status == .denied || status == .restricted
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,7 +28,11 @@ struct AlarmListView: View {
             .navigationTitle("GeoAlarm")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gear")
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -34,6 +44,9 @@ struct AlarmListView: View {
             }
             .sheet(isPresented: $showingAddAlarm) {
                 AlarmEditView(alarm: nil)
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
             .onAppear {
                 coordinator.setModelContext(modelContext)
@@ -50,25 +63,52 @@ struct AlarmListView: View {
     }
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Alarms", systemImage: "alarm")
-        } description: {
-            Text("Tap + to add a location-based alarm")
+        VStack(spacing: 20) {
+            if needsLocationUpgrade {
+                locationWarning
+            }
+            ContentUnavailableView {
+                Label("No Alarms", systemImage: "alarm")
+            } description: {
+                Text("Tap + to add a location-based alarm")
+            }
         }
     }
 
     private var alarmList: some View {
         List {
+            if needsLocationUpgrade {
+                Section {
+                    locationWarning
+                }
+            }
+
             ForEach(alarms) { alarm in
                 AlarmRow(alarm: alarm)
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        // Navigate to edit
-                    }
             }
             .onDelete(perform: deleteAlarms)
         }
         .listStyle(.plain)
+    }
+
+    private var locationWarning: some View {
+        VStack(spacing: 8) {
+            Label("Location set to \"While Using\"", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .font(.subheadline.bold())
+            Text("Alarms need \"Always\" location access to ring when the app is closed.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .font(.caption.bold())
+        }
+        .padding()
     }
 
     private func deleteAlarms(at offsets: IndexSet) {

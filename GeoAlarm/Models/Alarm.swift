@@ -16,6 +16,10 @@ final class Alarm {
     var longitude: Double
     var radiusMeters: Double
 
+    // Sound
+    var soundTypeRaw: String
+    var soundDurationRaw: Int
+
     var createdAt: Date
 
     init(
@@ -27,7 +31,9 @@ final class Alarm {
         locationName: String = "",
         latitude: Double = 0,
         longitude: Double = 0,
-        radiusMeters: Double = 200
+        radiusMeters: Double = 200,
+        soundType: AlarmSoundType? = nil,
+        soundDuration: AlarmSoundDuration? = nil
     ) {
         self.label = label
         self.hour = hour
@@ -38,7 +44,23 @@ final class Alarm {
         self.latitude = latitude
         self.longitude = longitude
         self.radiusMeters = radiusMeters
+        self.soundTypeRaw = (soundType ?? AlarmSoundSettings.defaultType).rawValue
+        self.soundDurationRaw = (soundDuration ?? AlarmSoundSettings.defaultDuration).rawValue
         self.createdAt = Date()
+    }
+
+    var soundType: AlarmSoundType {
+        get { AlarmSoundType(rawValue: soundTypeRaw) ?? .classic }
+        set { soundTypeRaw = newValue.rawValue }
+    }
+
+    var soundDuration: AlarmSoundDuration {
+        get { AlarmSoundDuration(rawValue: soundDurationRaw) ?? .thirty }
+        set { soundDurationRaw = newValue.rawValue }
+    }
+
+    var soundFilename: String {
+        AlarmSoundSettings.filename(type: soundType, duration: soundDuration)
     }
 
     var coordinate: CLLocationCoordinate2D {
@@ -48,9 +70,8 @@ final class Alarm {
     var timeString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
-        let calendar = Calendar.current
         let components = DateComponents(hour: hour, minute: minute)
-        if let date = calendar.date(from: components) {
+        if let date = Calendar.current.date(from: components) {
             return formatter.string(from: date)
         }
         return "\(hour):\(String(format: "%02d", minute))"
@@ -71,7 +92,6 @@ final class Alarm {
         return sorted.map { weekdaySymbols[$0 - 1] }.joined(separator: " ")
     }
 
-    /// Unique region identifier for geofencing
     var regionIdentifier: String {
         guard let id = persistentModelID.storeIdentifier else {
             return "alarm-\(createdAt.timeIntervalSince1970)"

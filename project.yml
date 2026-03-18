@@ -12,7 +12,12 @@ targets:
     type: application
     platform: iOS
     sources:
-      - GeoAlarm
+      - path: GeoAlarm
+        excludes:
+          - "Sounds/**"
+    resources:
+      - path: GeoAlarm/Sounds
+        buildPhase: resources
     settings:
       INFOPLIST_FILE: GeoAlarm/Info.plist
       CODE_SIGN_ENTITLEMENTS: GeoAlarm/GeoAlarm.entitlements
