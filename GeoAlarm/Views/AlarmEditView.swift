@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AVFoundation
 
 struct AlarmEditView: View {
     @Environment(\.modelContext) private var modelContext
@@ -20,6 +21,8 @@ struct AlarmEditView: View {
     @State private var soundDuration: AlarmSoundDuration
 
     @State private var showingLocationPicker = false
+    @State private var previewPlayer: AVAudioPlayer?
+    @State private var isPreviewing = false
 
     private var isNew: Bool { alarm == nil }
 
@@ -96,11 +99,22 @@ struct AlarmEditView: View {
                             Text(type.rawValue).tag(type)
                         }
                     }
+                    .onChange(of: soundType) { _, _ in stopPreview() }
 
                     Picker("Duration", selection: $soundDuration) {
                         ForEach(AlarmSoundDuration.allCases) { dur in
                             Text(dur.label).tag(dur)
                         }
+                    }
+
+                    Button {
+                        if isPreviewing {
+                            stopPreview()
+                        } else {
+                            playPreview()
+                        }
+                    } label: {
+                        Label(isPreviewing ? "Stop" : "Preview", systemImage: isPreviewing ? "stop.fill" : "play.fill")
                     }
                 }
             }
@@ -157,7 +171,35 @@ struct AlarmEditView: View {
 
         try? modelContext.save()
         coordinator.syncRegions()
+        stopPreview()
         dismiss()
+    }
+
+    private func playPreview() {
+        let filename = AlarmSoundSettings.filename(type: soundType, duration: soundDuration)
+        let name = filename.replacingOccurrences(of: ".caf", with: "")
+        guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else { return }
+
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            previewPlayer = try AVAudioPlayer(contentsOf: url)
+            previewPlayer?.numberOfLoops = 0
+            previewPlayer?.play()
+            isPreviewing = true
+
+            // Auto-stop after the sound finishes
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(soundDuration.rawValue) + 0.5) {
+                if isPreviewing { stopPreview() }
+            }
+        } catch {}
+    }
+
+    private func stopPreview() {
+        previewPlayer?.stop()
+        previewPlayer = nil
+        isPreviewing = false
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
 
