@@ -9,7 +9,6 @@ struct AlarmListView: View {
     @EnvironmentObject private var notificationManager: NotificationManager
 
     @State private var showingAddAlarm = false
-    @State private var hasRequestedPermissions = false
 
     var body: some View {
         NavigationStack {
@@ -37,13 +36,15 @@ struct AlarmListView: View {
                 AlarmEditView(alarm: nil)
             }
             .onAppear {
-                if !hasRequestedPermissions {
-                    hasRequestedPermissions = true
-                    locationManager.requestPermission()
-                    Task { await notificationManager.requestPermission() }
-                }
                 coordinator.setModelContext(modelContext)
                 coordinator.syncRegions()
+
+                if locationManager.authorizationStatus == .notDetermined {
+                    locationManager.requestPermission()
+                }
+                if !notificationManager.isAuthorized {
+                    Task { await notificationManager.requestPermission() }
+                }
             }
         }
     }
