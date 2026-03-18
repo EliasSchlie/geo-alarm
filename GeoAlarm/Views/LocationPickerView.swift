@@ -72,8 +72,8 @@ struct LocationPickerView: View {
                     }
 
                     MapCircle(center: coord, radius: radius)
-                        .foregroundStyle(.accent.opacity(0.15))
-                        .stroke(.accent, lineWidth: 1.5)
+                        .foregroundStyle(Color.accentColor.opacity(0.15))
+                        .stroke(Color.accentColor, lineWidth: 1.5)
                 }
             }
             .mapStyle(.standard(elevation: .realistic))

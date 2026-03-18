@@ -17,6 +17,7 @@ targets:
       INFOPLIST_FILE: GeoAlarm/Info.plist
       CODE_SIGN_ENTITLEMENTS: GeoAlarm/GeoAlarm.entitlements
       PRODUCT_BUNDLE_IDENTIFIER: com.elias.geoalarm
+      CODE_SIGN_STYLE: Automatic
       ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
       MARKETING_VERSION: "1.0.0"
       CURRENT_PROJECT_VERSION: 1

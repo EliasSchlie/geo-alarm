@@ -104,7 +104,7 @@ struct AlarmRow: View {
                     if !alarm.locationName.isEmpty {
                         Label(alarm.locationName, systemImage: "mappin")
                             .font(.caption)
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
                     }
 
                     Text(alarm.repeatDescription)
