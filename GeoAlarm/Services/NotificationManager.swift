@@ -12,7 +12,8 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
 
     @Published var isAuthorized = false
     @Published var activeAlarmLabel: String?
-    @Published var activeAlarmSound: String?
+    @Published var activeAlarmSoundType: AlarmSoundType?
+    @Published var activeAlarmSoundDuration: AlarmSoundDuration?
 
     override init() {
         super.init()
@@ -65,12 +66,12 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         let content = UNMutableNotificationContent()
         content.title = alarm.label.isEmpty ? "GeoAlarm" : alarm.label
         content.body = "📍 \(alarm.locationName.isEmpty ? "Location alarm" : alarm.locationName)"
-        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: alarm.soundFilename))
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: alarm.notificationSoundPath))
         content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = Self.alarmCategoryId
-        // Store sound info for the ringing UI
         content.userInfo = [
-            "soundFile": alarm.soundFilename,
+            "soundType": alarm.soundTypeRaw,
+            "soundDuration": alarm.soundDurationRaw,
             "label": alarm.label
         ]
 
@@ -120,21 +121,27 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
 
     func dismissActiveAlarm() {
         activeAlarmLabel = nil
-        activeAlarmSound = nil
+        activeAlarmSoundType = nil
+        activeAlarmSoundDuration = nil
     }
 
     func snoozeActiveAlarm() {
         let label = activeAlarmLabel ?? "GeoAlarm"
-        let soundFile = activeAlarmSound ?? "classic_30s.caf"
+        let sType = activeAlarmSoundType ?? .classic
+        let sDur = activeAlarmSoundDuration ?? .thirty
+        let soundPath = AlarmSoundSettings.notificationSoundPath(type: sType, duration: sDur)
 
-        // Schedule a new notification in 5 minutes
         let content = UNMutableNotificationContent()
         content.title = label
         content.body = "⏰ Snoozed alarm"
-        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: soundFile))
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: soundPath))
         content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = Self.alarmCategoryId
-        content.userInfo = ["soundFile": soundFile, "label": label]
+        content.userInfo = [
+            "soundType": sType.rawValue,
+            "soundDuration": sDur.rawValue,
+            "label": label
+        ]
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 300, repeats: false)
         let request = UNNotificationRequest(identifier: "snooze-\(Date().timeIntervalSince1970)", content: content, trigger: trigger)
@@ -149,33 +156,38 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         let userInfo = notification.request.content.userInfo
         DispatchQueue.main.async {
-            self.activeAlarmLabel = userInfo["label"] as? String ?? notification.request.content.title
-            self.activeAlarmSound = userInfo["soundFile"] as? String
+            self.extractAlarmInfo(from: userInfo, fallbackTitle: notification.request.content.title)
         }
         completionHandler([.banner, .sound, .badge])
     }
 
-    // Handle notification tap → show alarm UI
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let userInfo = response.notification.request.content.userInfo
 
         switch response.actionIdentifier {
         case Self.snoozeActionId:
             DispatchQueue.main.async {
-                self.activeAlarmSound = userInfo["soundFile"] as? String
-                self.activeAlarmLabel = userInfo["label"] as? String
+                self.extractAlarmInfo(from: userInfo, fallbackTitle: nil)
                 self.snoozeActiveAlarm()
             }
         case Self.dismissActionId, UNNotificationDismissActionIdentifier:
             DispatchQueue.main.async { self.dismissActiveAlarm() }
         default:
-            // Tapped the notification → show ringing UI
             DispatchQueue.main.async {
-                self.activeAlarmLabel = userInfo["label"] as? String ?? response.notification.request.content.title
-                self.activeAlarmSound = userInfo["soundFile"] as? String
+                self.extractAlarmInfo(from: userInfo, fallbackTitle: response.notification.request.content.title)
             }
         }
         completionHandler()
+    }
+
+    private func extractAlarmInfo(from userInfo: [AnyHashable: Any], fallbackTitle: String?) {
+        activeAlarmLabel = userInfo["label"] as? String ?? fallbackTitle ?? "Alarm"
+        if let typeRaw = userInfo["soundType"] as? String {
+            activeAlarmSoundType = AlarmSoundType(rawValue: typeRaw)
+        }
+        if let durRaw = userInfo["soundDuration"] as? Int {
+            activeAlarmSoundDuration = AlarmSoundDuration(rawValue: durRaw)
+        }
     }
 
     private func notificationId(for alarm: Alarm, weekday: Int?) -> String {

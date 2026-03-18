@@ -57,11 +57,11 @@ struct SoundPreviewButton: View {
     }
 
     private func playPreview() {
-        let filename = AlarmSoundSettings.filename(type: type, duration: duration)
-        let name = filename.replacingOccurrences(of: ".caf", with: "")
-        guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else { return }
+        guard let url = AlarmSoundSettings.bundleURL(type: type, duration: duration) else { return }
 
         do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
             player = try AVAudioPlayer(contentsOf: url)
             player?.numberOfLoops = 0
             player?.play()

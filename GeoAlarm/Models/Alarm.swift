@@ -63,6 +63,10 @@ final class Alarm {
         AlarmSoundSettings.filename(type: soundType, duration: soundDuration)
     }
 
+    var notificationSoundPath: String {
+        AlarmSoundSettings.notificationSoundPath(type: soundType, duration: soundDuration)
+    }
+
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }

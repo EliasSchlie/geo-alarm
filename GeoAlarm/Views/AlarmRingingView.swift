@@ -91,15 +91,9 @@ struct AlarmRingingView: View {
     }
 
     private func playSound() {
-        let filename = notificationManager.activeAlarmSound ?? "classic_30s.caf"
-        let name = filename.replacingOccurrences(of: ".caf", with: "")
-
-        guard let url = Bundle.main.url(forResource: name, withExtension: "caf", subdirectory: "Sounds") else {
-            // Try without subdirectory (depends on how Xcode bundles it)
-            guard let url2 = Bundle.main.url(forResource: name, withExtension: "caf") else { return }
-            startPlayer(url: url2)
-            return
-        }
+        let sType = notificationManager.activeAlarmSoundType ?? .classic
+        let sDur = notificationManager.activeAlarmSoundDuration ?? .thirty
+        guard let url = AlarmSoundSettings.bundleURL(type: sType, duration: sDur) else { return }
         startPlayer(url: url)
     }
 

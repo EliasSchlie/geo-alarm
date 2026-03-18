@@ -15,8 +15,8 @@ targets:
       - path: GeoAlarm
         excludes:
           - "Sounds/**"
-    resources:
       - path: GeoAlarm/Sounds
+        type: folder
         buildPhase: resources
     settings:
       INFOPLIST_FILE: GeoAlarm/Info.plist

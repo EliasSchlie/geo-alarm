@@ -176,9 +176,7 @@ struct AlarmEditView: View {
     }
 
     private func playPreview() {
-        let filename = AlarmSoundSettings.filename(type: soundType, duration: soundDuration)
-        let name = filename.replacingOccurrences(of: ".caf", with: "")
-        guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else { return }
+        guard let url = AlarmSoundSettings.bundleURL(type: soundType, duration: soundDuration) else { return }
 
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)

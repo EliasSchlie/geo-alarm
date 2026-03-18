@@ -41,7 +41,19 @@ struct AlarmSoundSettings {
         set { UserDefaults.standard.set(newValue.rawValue, forKey: defaultsKeyDuration) }
     }
 
+    /// Filename without path (e.g. "classic_30s.caf")
     static func filename(type: AlarmSoundType, duration: AlarmSoundDuration) -> String {
         "\(type.rawValue.lowercased())_\(duration.rawValue)s.caf"
+    }
+
+    /// Path relative to bundle root for UNNotificationSound (e.g. "Sounds/classic_30s.caf")
+    static func notificationSoundPath(type: AlarmSoundType, duration: AlarmSoundDuration) -> String {
+        "Sounds/\(filename(type: type, duration: duration))"
+    }
+
+    /// Get the bundle URL for a sound file
+    static func bundleURL(type: AlarmSoundType, duration: AlarmSoundDuration) -> URL? {
+        let name = "\(type.rawValue.lowercased())_\(duration.rawValue)s"
+        return Bundle.main.url(forResource: name, withExtension: "caf", subdirectory: "Sounds")
     }
 }
