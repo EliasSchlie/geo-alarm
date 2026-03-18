@@ -8,9 +8,9 @@ SwiftUI, SwiftData, Core Location (geofencing), MapKit, UserNotifications. iOS 1
 
 ## Architecture
 
-- **Models:** `Alarm` (SwiftData) — time, repeat days, location, radius
+- **Models:** `Alarm` (SwiftData) — time, repeat days, location, radius, sound type/duration. `AlarmSound` — sound types + duration enums + defaults (UserDefaults)
 - **Services:** `LocationManager` (geofencing), `NotificationManager` (local notifications), `AlarmCoordinator` (wires them together)
-- **Views:** `AlarmListView`, `AlarmEditView`, `LocationPickerView`
+- **Views:** `AlarmListView`, `AlarmEditView`, `LocationPickerView`, `AlarmRingingView`, `SettingsView`
 
 ## How It Works
 
@@ -23,11 +23,23 @@ SwiftUI, SwiftData, Core Location (geofencing), MapKit, UserNotifications. iOS 1
 
 ```sh
 xcodegen generate   # regenerate .xcodeproj from project.yml
+xcodebuild -project GeoAlarm.xcodeproj -scheme GeoAlarm -destination 'platform=iOS,id=00008101-000465C63AF0001E' -allowProvisioningUpdates -quiet build
+xcrun devicectl device install app --device 00008101-000465C63AF0001E ~/Library/Developer/Xcode/DerivedData/GeoAlarm-bmhiuoofqntgofeayuccgyryzjpx/Build/Products/Debug-iphoneos/GeoAlarm.app
 ```
 
-Open `GeoAlarm.xcodeproj` in Xcode, select your iPhone, Run.
-
 Team ID: Q2U8K9N3BL. Bundle ID: com.elias.geoalarm.
+Device ID: 00008101-000465C63AF0001E (Elias' iPhone 12 Pro Max, iOS 18.5)
+
+## Gotchas
+
+- **Always regenerate xcodeproj** after changing `project.yml`: `xcodegen generate`
+- **Verify resources are bundled** after build: `find .../GeoAlarm.app/ -name "*.caf" | wc -l` — XcodeGen resource config is fragile
+- **SwiftData schema changes** delete existing data (app resets store on migration failure)
+- **Sound files** use `type: folder` + `buildPhase: resources` in `project.yml` sources (not separate `resources:` key)
+- **Custom notification sounds** need path relative to bundle root (e.g. `Sounds/classic_30s.caf`), not just filename
+- **Geofence requires "Always" location** — "When In Use" won't trigger in background. App shows warning banner if not granted.
+- **`requestState(for:)`** must be called after `startMonitoring(for:)` to handle "already inside region" case
+- **Generate sounds** with Python: `python3` + `wave` module → `.wav` → `afconvert -f caff -d LEI16` → `.caf`
 
 ## Limits
 
