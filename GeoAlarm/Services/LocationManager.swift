@@ -44,6 +44,8 @@ final class LocationManager: NSObject, ObservableObject {
         region.notifyOnExit = true
 
         manager.startMonitoring(for: region)
+        // Request initial state — triggers didDetermineState if already inside
+        manager.requestState(for: region)
         logger.info("Started monitoring region: \(identifier), radius: \(clampedRadius)m")
         updateMonitoredSet()
     }

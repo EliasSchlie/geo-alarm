@@ -144,34 +144,50 @@ struct AlarmEditView: View {
 struct RepeatDaysPicker: View {
     @Binding var selectedDays: Set<Int>
 
+    private static let allDays: Set<Int> = [1, 2, 3, 4, 5, 6, 7]
     private let days = Calendar.current.shortWeekdaySymbols
     // Calendar weekday: 1=Sun, 2=Mon, ..., 7=Sat
 
+    private var isEveryDay: Bool {
+        selectedDays == Self.allDays
+    }
+
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                let weekday = index + 1
-                Button {
-                    if selectedDays.contains(weekday) {
-                        selectedDays.remove(weekday)
-                    } else {
-                        selectedDays.insert(weekday)
-                    }
-                } label: {
-                    Text(String(day.prefix(1)))
-                        .font(.caption.bold())
-                        .frame(width: 36, height: 36)
-                        .background(
-                            selectedDays.contains(weekday)
-                                ? Color.accentColor
-                                : Color(.systemGray5)
-                        )
-                        .foregroundStyle(
-                            selectedDays.contains(weekday) ? .white : .primary
-                        )
-                        .clipShape(Circle())
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Every day", isOn: Binding(
+                get: { isEveryDay },
+                set: { newValue in
+                    selectedDays = newValue ? Self.allDays : []
                 }
-                .buttonStyle(.plain)
+            ))
+
+            if !isEveryDay {
+                HStack(spacing: 6) {
+                    ForEach(Array(days.enumerated()), id: \.offset) { index, day in
+                        let weekday = index + 1
+                        Button {
+                            if selectedDays.contains(weekday) {
+                                selectedDays.remove(weekday)
+                            } else {
+                                selectedDays.insert(weekday)
+                            }
+                        } label: {
+                            Text(String(day.prefix(1)))
+                                .font(.caption.bold())
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    selectedDays.contains(weekday)
+                                        ? Color.accentColor
+                                        : Color(.systemGray5)
+                                )
+                                .foregroundStyle(
+                                    selectedDays.contains(weekday) ? .white : .primary
+                                )
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
         }
         .padding(.vertical, 4)
