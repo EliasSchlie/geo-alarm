@@ -37,10 +37,12 @@ final class AlarmCoordinator: ObservableObject {
         guard let alarms = try? context.fetch(descriptor) else { return }
 
         // Stop monitoring regions that no longer have active alarms
+        // and cancel any lingering notifications for them
         let activeIds = Set(alarms.map(\.regionIdentifier))
         for regionId in locationManager.monitoredRegionIds {
             if !activeIds.contains(regionId) {
                 locationManager.stopMonitoringRegion(identifier: regionId)
+                notificationManager.cancelNotifications(forRegion: regionId)
             }
         }
 

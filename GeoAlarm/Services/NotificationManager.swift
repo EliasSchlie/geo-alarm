@@ -106,12 +106,18 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
     }
 
     func cancelAlarm(_ alarm: Alarm) {
-        var ids = [notificationId(for: alarm, weekday: nil)]
-        for weekday in 1...7 {
-            ids.append(notificationId(for: alarm, weekday: weekday))
-        }
+        let ids = notificationIds(for: alarm)
         center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
         logger.info("Cancelled notifications for alarm: \(alarm.label)")
+    }
+
+    func cancelNotifications(forRegion regionId: String) {
+        let suffixes = ["once"] + (1...7).map { "day\($0)" }
+        let ids = suffixes.map { "\(regionId)-\($0)" }
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
+        logger.info("Cancelled notifications for region: \(regionId)")
     }
 
     func cancelAll() {
@@ -188,6 +194,14 @@ final class NotificationManager: NSObject, ObservableObject, UNUserNotificationC
         if let durRaw = userInfo["soundDuration"] as? Int {
             activeAlarmSoundDuration = AlarmSoundDuration(rawValue: durRaw)
         }
+    }
+
+    private func notificationIds(for alarm: Alarm) -> [String] {
+        var ids = [notificationId(for: alarm, weekday: nil)]
+        for weekday in 1...7 {
+            ids.append(notificationId(for: alarm, weekday: weekday))
+        }
+        return ids
     }
 
     private func notificationId(for alarm: Alarm, weekday: Int?) -> String {

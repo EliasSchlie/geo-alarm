@@ -119,6 +119,7 @@ struct AlarmListView: View {
             modelContext.delete(alarm)
         }
         try? modelContext.save()
+        coordinator.syncRegions()
     }
 }
 
@@ -159,9 +160,8 @@ struct AlarmRow: View {
             Toggle("", isOn: $alarm.isEnabled)
                 .labelsHidden()
                 .onChange(of: alarm.isEnabled) { _, enabled in
-                    if enabled {
-                        coordinator.syncRegions()
-                    } else {
+                    coordinator.syncRegions()
+                    if !enabled {
                         notificationManager.cancelAlarm(alarm)
                     }
                 }
